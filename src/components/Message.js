@@ -20,7 +20,8 @@ class Message extends Component {
             </div>
             <div className="col-xs-2">
               <i className={"star fa fa-star" +
-                  (this.props.message.starred === true ? '-o' : ' ')}></i>
+                  (this.props.message.starred === true ? '-o' : ' ')}
+                  onClick={this.toggleClass.bind(this, 'starred')}></i>
             </div>
           </div>
         </div>

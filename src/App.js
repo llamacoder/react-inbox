@@ -2,25 +2,52 @@ import React, { Component } from 'react';
 import MessageList from './components/MessageList';
 import Toolbar from './components/Toolbar';
 
+const SELECT_NONE = 0;
+const SELECT_SOME = 1;
+const SELECT_ALL = 2;
+
 class App extends Component {
   constructor () {
     super();
-    this.state = { messages: [] };
+    this.state = { messages: [], selectTool:SELECT_NONE };
   }
   render() {
     return (
       <div className="App">
-        <Toolbar />
+        <Toolbar selectTool={ this.state.selectTool }
+           clickSelectTool={this.clickSelectTool.bind(this)} />
         <MessageList messages={ this.state.messages } toggleClass={this.toggleClass.bind(this)}/>
       </div>
     );
+  }
+
+  //  This method gets called when the user clicks on the selectTool button.
+  //  It should toggle between none (empty square) and all (checked square)
+  clickSelectTool() {
+    console.log("Inside");
+    if (this.state.selectTool === SELECT_ALL) {
+      this.setState({ selectTool: SELECT_NONE });
+      this.setSelectionForAll(false);
+    } else {
+      this.setState({ selectTool: SELECT_ALL });
+      this.setSelectionForAll(true);
+    }
+  }
+
+  setSelectionForAll(sel) {
+    console.log("setselection: " + sel);
+    let newMessages = this.state.messages.map(msg => {
+      msg.selected = sel;
+      return msg;
+    });
+    this.setState({ messages: newMessages });
   }
 
   toggleClass(id, prop) {
     let messages = this.state.messages;
     let index = messages.findIndex(x => x.id === id);
 
-    //  find the message with the input ID, then toggle the input prop 
+    //  find the message with the input ID, then toggle the input prop
     messages[index][prop] = !messages[index][prop];
     this.setState({ messages: messages });
   }

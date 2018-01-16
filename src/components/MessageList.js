@@ -6,7 +6,7 @@ class MessageList extends Component {
     let msgs = {};
     if (this.props.messages) {
       msgs = this.props.messages.map(msg => {
-        return <Message key={msg.id} message={msg} toggleClass={this.toggleClass.bind(this)} />
+        return <Message key={msg.id} message={msg} toggleClass={this.props.toggleClass} />
       });
     }
     return (
@@ -16,9 +16,6 @@ class MessageList extends Component {
     );
   }
 
-  toggleClass(id, prop) {
-    this.props.toggleClass(id, prop);
-  }
 }
 
 export default MessageList;
