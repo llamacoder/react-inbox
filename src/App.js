@@ -10,11 +10,19 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        My App
-        <MessageList messages={ this.state.messages } />
         <Toolbar />
+        <MessageList messages={ this.state.messages } toggleClass={this.toggleClass.bind(this)}/>
       </div>
     );
+  }
+
+  toggleClass(id, prop) {
+    let messages = this.state.messages;
+    let index = messages.findIndex(x => x.id === id);
+
+    //  find the message with the input ID, then toggle the input prop 
+    messages[index][prop] = !messages[index][prop];
+    this.setState({ messages: messages });
   }
 
   componentWillMount() {

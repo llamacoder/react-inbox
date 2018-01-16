@@ -4,13 +4,10 @@ class Message extends Component {
   render() {
     let labels = {};
     if (this.props.message.labels) {
-      labels = this.props.message.labels.map(label => {
-        return <span key={this.props.message.label} className="label label-warning">{label}</span>
+      labels = this.props.message.labels.map((label, idx) => {
+        return <span key={idx} className="label label-warning">{label}</span>
       });
     }
-    let chkBox = this.props.message.selected === true
-        ? <input type="checkbox" checked="checked" />
-        : <input type="checkbox" />
     return (
       <div className={"row message " +
         (this.props.message.read === true ? 'read ' : 'unread ') +
@@ -18,7 +15,8 @@ class Message extends Component {
         <div className="col-xs-1">
           <div className="row">
             <div className="col-xs-2">
-              {chkBox}
+              <input type="checkbox" checked={!!this.props.message.selected}
+                      onChange={this.toggleClass.bind(this, 'selected')}/>
             </div>
             <div className="col-xs-2">
               <i className={"star fa fa-star" +
@@ -33,6 +31,10 @@ class Message extends Component {
           </a>
         </div>
       </div>    )
+  }
+
+  toggleClass(prop) {
+    this.props.toggleClass(this.props.message.id, prop);
   }
 }
 
