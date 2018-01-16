@@ -27,9 +27,9 @@ class Message extends Component {
         </div>
         <div className="col-xs-11">
           {labels}
-          <a href="">
+          <p style={{display: 'inline-block'}}>
             { this.props.message.subject }
-          </a>
+          </p>
         </div>
       </div>    )
   }

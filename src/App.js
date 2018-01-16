@@ -18,15 +18,28 @@ class App extends Component {
         <Toolbar selectTool={ this.state.selectTool }
           unreadCount={ this.state.unreadCount }
            clickSelectTool={this.clickSelectTool.bind(this)}
+           clickReadButton={ this.clickReadButton.bind(this)}
+           clickUnreadButton={ this.clickUnreadButton.bind(this) }
           />
         <MessageList messages={ this.state.messages } toggleClass={this.toggleClass.bind(this)}/>
       </div>
     );
   }
 
+  //  This method gets called when the user clicks on the Mark as Read button.
+  clickReadButton() {
+    this.setPropForSelected("read", true);
+  }
+
+  //  This method gets called when the user clicks on the Mark as Read button.
+  clickUnreadButton() {
+    this.setPropForSelected("read", false);
+  }
+
   //  This method gets called when the user clicks on the selectTool button.
   //  It should toggle between none (empty square) and all (checked square)
-  clickSelectTool() {
+  clickSelectTool(e) {
+    e.preventDefault();
     if (this.state.selectTool === SELECT_ALL) {
       this.setState({ selectTool: SELECT_NONE });
       this.setSelectionForAll(false);
@@ -36,12 +49,26 @@ class App extends Component {
     }
   }
 
+  //  sets the input property to the input value for every message that is selected,
+  //  then it resets the unread message counter and sets state
+  setPropForSelected(prop, val) {
+    let newMessages = this.state.messages.map(msg => {
+      if (msg.selected === true) {
+        msg[prop] = val
+      }
+      return msg;
+    });
+    let unread = this.getPropCount(newMessages, "read", false);
+    this.setState({ messages: newMessages, unreadCount:unread });
+  }
+
   setSelectionForAll(sel) {
     let newMessages = this.state.messages.map(msg => {
       msg.selected = sel;
       return msg;
     });
-    this.setState({ messages: newMessages });
+    let unread = this.getPropCount(newMessages, "read", false);
+    this.setState({ messages: newMessages, unreadCount:unread });
   }
 
   toggleClass(id, prop) {
@@ -115,7 +142,7 @@ class App extends Component {
         "id": 5,
         "subject": "If we override the interface, we can get to the HTTP feed through the virtual EXE interface!",
         "selected": true,
-        "read": true,
+        "read": false,
         "starred": false,
         "labels": ["personal"]
       },
@@ -123,7 +150,6 @@ class App extends Component {
         "id": 6,
         "subject": "We need to back up the wireless GB driver!",
         "selected": true,
-        "read": true,
         "starred": true,
         "labels": []
       },
@@ -137,7 +163,7 @@ class App extends Component {
       {
         "id": 8,
         "subject": "If we connect the sensor, we can get to the HDD port through the redundant IB firewall!",
-        "read": true,
+        "read": false,
         "selected": false,
         "starred": true,
         "labels": []
