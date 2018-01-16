@@ -13,7 +13,6 @@ class App extends Component {
     this.state = { messages: [], unreadCount:UNREAD_COUNT, selectTool:SELECT_NONE  };
   }
   render() {
-    console.log(`unreadCount in App: ${this.state.unreadCount}`);
     return (
       <div className="App">
         <Toolbar selectTool={ this.state.selectTool }
@@ -28,7 +27,6 @@ class App extends Component {
   //  This method gets called when the user clicks on the selectTool button.
   //  It should toggle between none (empty square) and all (checked square)
   clickSelectTool() {
-    console.log("Inside");
     if (this.state.selectTool === SELECT_ALL) {
       this.setState({ selectTool: SELECT_NONE });
       this.setSelectionForAll(false);
@@ -39,7 +37,6 @@ class App extends Component {
   }
 
   setSelectionForAll(sel) {
-    console.log("setselection: " + sel);
     let newMessages = this.state.messages.map(msg => {
       msg.selected = sel;
       return msg;
@@ -58,19 +55,26 @@ class App extends Component {
 
   componentWillMount() {
     let messageArray = this.initializeData();
-    let unread = this.getUnreadCount(messageArray);
-    console.log("unread: " + unread + " unreadcount: " + this.state.unreadCount);
-    this.setState({ messages: messageArray, unreadCount: unread });
-    console.log(this.state);
+    let unread = this.getPropCount(messageArray, "read", false);
+    let sel = this.getPropCount(messageArray, "selected", true);
+    let selCount = -1;
+    if (sel === 0) {
+      selCount = SELECT_NONE;
+    } else if (sel === messageArray.length) {
+      selCount = SELECT_ALL;
+    } else {
+      selCount = SELECT_SOME;
+    }
+    this.setState({ messages: messageArray, unreadCount: unread,
+        selectTool: selCount });
   }
 
-  getUnreadCount(messages) {
+  //  returns a count of how many messages have the input prop with a value of val
+  getPropCount(messages, prop, val) {
     let count =  messages.reduce(function(total, msg) {
-      console.log("msg.read: " + msg.read);
-      return msg["read"] === false ? ++total : total
+      return !!msg[prop] === val ? ++total : total
     }, 0);
-    console.log("Count " + count);
-    return count;  
+    return count;
   }
 
   initializeData() {
@@ -80,41 +84,45 @@ class App extends Component {
         "subject": "You can't input the protocol without calculating the mobile RSS protocol!",
         "read": false,
         "starred": true,
+        "selected": true,
         "labels": ["dev", "personal"]
       },
       {
         "id": 2,
         "subject": "connecting the system won't do anything, we need to input the mobile AI panel!",
         "read": false,
-        "starred": false,
         "selected": true,
+        "starred": false,
         "labels": []
       },
       {
         "id": 3,
         "subject": "Use the 1080p HTTP feed, then you can parse the cross-platform hard drive!",
         "read": false,
+        "selected": true,
         "starred": true,
         "labels": ["dev"]
       },
       {
         "id": 4,
         "subject": "We need to program the primary TCP hard drive!",
+        "selected": true,
         "read": true,
         "starred": false,
-        "selected": true,
         "labels": []
       },
       {
         "id": 5,
         "subject": "If we override the interface, we can get to the HTTP feed through the virtual EXE interface!",
-        "read": false,
+        "selected": true,
+        "read": true,
         "starred": false,
         "labels": ["personal"]
       },
       {
         "id": 6,
         "subject": "We need to back up the wireless GB driver!",
+        "selected": true,
         "read": true,
         "starred": true,
         "labels": []
@@ -130,6 +138,7 @@ class App extends Component {
         "id": 8,
         "subject": "If we connect the sensor, we can get to the HDD port through the redundant IB firewall!",
         "read": true,
+        "selected": false,
         "starred": true,
         "labels": []
       }
