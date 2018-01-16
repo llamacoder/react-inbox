@@ -5,17 +5,21 @@ import Toolbar from './components/Toolbar';
 const SELECT_NONE = 0;
 const SELECT_SOME = 1;
 const SELECT_ALL = 2;
+const UNREAD_COUNT = 1;
 
 class App extends Component {
   constructor () {
     super();
-    this.state = { messages: [], selectTool:SELECT_NONE };
+    this.state = { messages: [], unreadCount:UNREAD_COUNT, selectTool:SELECT_NONE  };
   }
   render() {
+    console.log(`unreadCount in App: ${this.state.unreadCount}`);
     return (
       <div className="App">
         <Toolbar selectTool={ this.state.selectTool }
-           clickSelectTool={this.clickSelectTool.bind(this)} />
+          unreadCount={ this.state.unreadCount }
+           clickSelectTool={this.clickSelectTool.bind(this)}
+          />
         <MessageList messages={ this.state.messages } toggleClass={this.toggleClass.bind(this)}/>
       </div>
     );
@@ -53,7 +57,24 @@ class App extends Component {
   }
 
   componentWillMount() {
-    this.setState({ messages: [
+    let messageArray = this.initializeData();
+    let unread = this.getUnreadCount(messageArray);
+    console.log("unread: " + unread + " unreadcount: " + this.state.unreadCount);
+    this.setState({ messages: messageArray, unreadCount: unread });
+    console.log(this.state);
+  }
+
+  getUnreadCount(messages) {
+    let count =  messages.reduce(function(total, msg) {
+      console.log("msg.read: " + msg.read);
+      return msg["read"] === false ? ++total : total
+    }, 0);
+    console.log("Count " + count);
+    return count;  
+  }
+
+  initializeData() {
+    return [
       {
         "id": 1,
         "subject": "You can't input the protocol without calculating the mobile RSS protocol!",
@@ -112,7 +133,7 @@ class App extends Component {
         "starred": true,
         "labels": []
       }
-    ]});
+    ];
   }
 }
 
