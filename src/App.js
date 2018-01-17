@@ -20,6 +20,7 @@ class App extends Component {
            clickSelectTool={this.clickSelectTool.bind(this)}
            clickReadButton={ this.clickReadButton.bind(this)}
            clickUnreadButton={ this.clickUnreadButton.bind(this) }
+           clickDeleteButton={ this.clickDeleteButton.bind(this) }
           />
         <MessageList messages={ this.state.messages } toggleClass={this.toggleClass.bind(this)}/>
       </div>
@@ -53,10 +54,18 @@ class App extends Component {
   //  then it resets the unread message counter and sets state
   setPropForSelected(prop, val) {
     let newMessages = this.state.messages.map(msg => {
-      if (msg.selected === true) {
-        msg[prop] = val
-      }
-      return msg;
+        if (msg.selected === true) {
+          msg[prop] = val
+        }
+        return msg;
+      });
+      let unread = this.getPropCount(newMessages, "read", false);
+      this.setState({ messages: newMessages, unreadCount:unread });
+  }
+
+  clickDeleteButton() {
+    let newMessages = this.state.messages.filter(msg => {
+      return !msg.selected === true;
     });
     let unread = this.getPropCount(newMessages, "read", false);
     this.setState({ messages: newMessages, unreadCount:unread });

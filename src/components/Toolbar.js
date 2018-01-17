@@ -39,7 +39,8 @@ class Toolbar extends Component {
             <option value="gschool">gschool</option>
           </select>
 
-          <button className="btn btn-default">
+          <button className="btn btn-default"
+                onClick={this.props.clickDeleteButton}>
             <i className="fa fa-trash-o"></i>
           </button>
         </div>
