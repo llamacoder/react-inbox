@@ -45,14 +45,15 @@ class App extends Component {
     this.setPropForSelected("read", false);
   }
 
+  //  display the form for adding a message
   clickAddMessageButton() {
     this.setState({ addMsg:!this.state.addMsg })
   }
 
   //  This method gets called when the user clicks on the selectTool button.
   //  It should toggle between none (empty square) and all (checked square)
-  clickSelectTool(e) {
-    e.preventDefault();
+  clickSelectTool(event) {
+    event.preventDefault();
     if (this.state.selectTool === SELECT_ALL) {
       this.setState({ selectTool: SELECT_NONE });
       this.setSelectionForAll(false);
@@ -62,6 +63,7 @@ class App extends Component {
     }
   }
 
+  //  This message handes the submission of a new message.
   async handleAddMessage(subject, body) {
       const response = await fetch('http://localhost:8082/api/messages', {
         method: 'POST',
@@ -73,9 +75,29 @@ class App extends Component {
       })
       const message = await response.json()
       this.setState({messages: [...this.state.messages, message]})
-      this.clickAddMessageButton();
+      this.clickAddMessageButton();  // to hide the add message form
     }
 
+  //  returns an array of the ids of the currently selected messages
+  getSelectedMessageIDs() {
+    return this.state.messages.reduce((results, msg) => {
+        if (msg.selected === true) {
+          results.push(msg.id)
+        }
+        return results;
+      }, []);
+  }
+
+  //  returns an array of the ids of all the messages
+  getAllMessageIDs() {
+    return this.state.messages.reduce((results, msg) => {
+          results.push(msg.id)
+          return results;
+      }, []);
+  }
+
+  //  handles the event when the user selects a label to add to all the
+  //  currently selected messages
   handleAddLabelChange(event) {
     let addLabel = event.target.value;
     let newMessages = this.state.messages.map(msg => {
@@ -84,48 +106,82 @@ class App extends Component {
         }
         return msg;
       });
-      let unread = this.getPropCount(newMessages, "read", false);
-      this.setState({ messages: newMessages, unreadCount:unread });
+      this.setState({ messages: newMessages });
+      let ids = this.getSelectedMessageIDs();
+      this.setPropsRemotely(ids, "addLabel", 'label', addLabel)
   }
 
+  //  handles the event when the user selects a label to remove from all the
+  //  currently selected messages
   handleRemoveLabelChange(event) {
     let remLabel = event.target.value;
     let newMessages = this.state.messages.map(msg => {
+      if (msg.selected === true) {
         msg.labels = msg.labels.filter(label => label === remLabel ? false : true)
+      }
         return msg;
-      });
-      let unread = this.getPropCount(newMessages, "read", false);
-      this.setState({ messages: newMessages, unreadCount:unread });
+    });
+    this.setState({ messages: newMessages });
+    let ids = this.getSelectedMessageIDs();
+    this.setPropsRemotely(ids, "removeLabel", 'label', remLabel)
   }
 
-  //  sets the input property to the input value for every message that is selected,
+  //  sets the input property to the input value for every message in the id array,
   //  then it resets the unread message counter and sets state
-  setPropForSelected(prop, val) {
-    let newMessages = this.state.messages.map(msg => {
-        if (msg.selected === true) {
-          msg[prop] = val
-        }
-        return msg;
-      });
+  setPropsLocally(ids, prop, val) {
+    //  update locally first
+    let newMessages = this.state.messages;
+    for (let i = 0; i < ids.length; i++) {
+      let msg = newMessages.find(message => message.id === ids[i]);
+      msg[prop] = val;
+    }
+    this.setState({messages: newMessages})
+    if (prop === 'read') {
       let unread = this.getPropCount(newMessages, "read", false);
       this.setState({ messages: newMessages, unreadCount:unread });
+    }
+  }
+
+  //  sets the input property to the input value for every message in the id array,
+  //  then it resets the unread message counter and sets state
+  async setPropsRemotely(ids, cmd, prop, val) {
+    //  now persist changes to server
+    let info = {'messageIds':ids, 'command':cmd };
+    if (prop != null && val != null) {
+      info[prop] = val;
+    }
+
+    console.log(info);
+    const response = await fetch('http://localhost:8082/api/messages', {
+      method: 'PATCH',
+      body: JSON.stringify(info),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      }
+    })
+    console.log(response);
+  }
+
+  setPropForSelected(prop, val) {
+    let selMessages = this.getSelectedMessageIDs();
+    this.setPropsLocally(selMessages, prop, val);
+    this.setPropsRemotely(selMessages, prop, prop, val);
   }
 
   clickDeleteButton() {
+    let selMessages = this.getSelectedMessageIDs();
     let newMessages = this.state.messages.filter(msg => {
       return !msg.selected === true;
     });
     let unread = this.getPropCount(newMessages, "read", false);
     this.setState({ messages: newMessages, unreadCount:unread });
+    this.setPropsRemotely(selMessages, 'delete', null, null);  // persist the values
   }
 
   setSelectionForAll(sel) {
-    let newMessages = this.state.messages.map(msg => {
-      msg.selected = sel;
-      return msg;
-    });
-    let unread = this.getPropCount(newMessages, "read", false);
-    this.setState({ messages: newMessages, unreadCount:unread });
+    let allMessages = this.getAllMessageIDs();
+    this.setPropsLocally(allMessages, "selected", sel);
   }
 
   toggleClass(id, prop) {
@@ -136,6 +192,9 @@ class App extends Component {
     messages[index][prop] = !messages[index][prop];
     this.setState({ messages: messages });
     this.updateSelectTool(messages);
+    if (prop === 'starred') {
+      this.setPropsRemotely([id], 'star', 'star', messages[index][prop]);
+    }
   }
 
   updateSelectTool(messages) {
@@ -159,19 +218,6 @@ class App extends Component {
     let unread = this.getPropCount(newMessages, "read", false);
     this.setState({unreadCount: unread})
     this.updateSelectTool(newMessages);
-  }
-
-  async createMessage(item) {
-    const response = await fetch('http://localhost:8082/api/people', {
-      method: 'POST',
-      body: JSON.stringify(item),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      }
-    })
-    const person = await response.json()
-    this.setState({people: [...this.state.people, person]})
   }
 
 
