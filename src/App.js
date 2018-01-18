@@ -21,6 +21,8 @@ class App extends Component {
            clickReadButton={ this.clickReadButton.bind(this)}
            clickUnreadButton={ this.clickUnreadButton.bind(this) }
            clickDeleteButton={ this.clickDeleteButton.bind(this) }
+           handleAddLabelChange={ this.handleAddLabelChange.bind(this) }
+           handleRemoveLabelChange={ this.handleRemoveLabelChange.bind(this) }
           />
         <MessageList messages={ this.state.messages } toggleClass={this.toggleClass.bind(this)}/>
       </div>
@@ -48,6 +50,28 @@ class App extends Component {
       this.setState({ selectTool: SELECT_ALL });
       this.setSelectionForAll(true);
     }
+  }
+
+  handleAddLabelChange(event) {
+    let addLabel = event.target.value;
+    let newMessages = this.state.messages.map(msg => {
+        if (msg.selected === true && (msg.labels.find(label => label === addLabel) === undefined)) {
+          msg.labels.push(addLabel)
+        }
+        return msg;
+      });
+      let unread = this.getPropCount(newMessages, "read", false);
+      this.setState({ messages: newMessages, unreadCount:unread });
+  }
+
+  handleRemoveLabelChange(event) {
+    let remLabel = event.target.value;
+    let newMessages = this.state.messages.map(msg => {
+        msg.labels = msg.labels.filter(label => label === remLabel ? false : true)
+        return msg;
+      });
+      let unread = this.getPropCount(newMessages, "read", false);
+      this.setState({ messages: newMessages, unreadCount:unread });
   }
 
   //  sets the input property to the input value for every message that is selected,
@@ -87,22 +111,27 @@ class App extends Component {
     //  find the message with the input ID, then toggle the input prop
     messages[index][prop] = !messages[index][prop];
     this.setState({ messages: messages });
+    this.updateSelectTool(messages);
+  }
+
+  updateSelectTool(messages) {
+    let sel = this.getPropCount(messages, "selected", true);
+    let selCount = -1;
+    if (sel === 0) {
+      selCount = SELECT_NONE;
+    } else if (sel === messages.length) {
+      selCount = SELECT_ALL;
+    } else {
+      selCount = SELECT_SOME;
+    }
+    this.setState({ selectTool: selCount });
   }
 
   componentWillMount() {
     let messageArray = this.initializeData();
     let unread = this.getPropCount(messageArray, "read", false);
-    let sel = this.getPropCount(messageArray, "selected", true);
-    let selCount = -1;
-    if (sel === 0) {
-      selCount = SELECT_NONE;
-    } else if (sel === messageArray.length) {
-      selCount = SELECT_ALL;
-    } else {
-      selCount = SELECT_SOME;
-    }
-    this.setState({ messages: messageArray, unreadCount: unread,
-        selectTool: selCount });
+    this.setState({ messages: messageArray, unreadCount: unread });
+    this.updateSelectTool(messageArray);
   }
 
   //  returns a count of how many messages have the input prop with a value of val

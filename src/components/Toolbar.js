@@ -25,15 +25,17 @@ class Toolbar extends Component {
             Mark As Unread
           </button>
 
-          <select className="form-control label-select">
-            <option>Apply label</option>
+          <select className="form-control label-select"
+               onChange={this.handleAddLabelChange.bind(this)}>
+            <option value="reset">Apply label</option>
             <option value="dev">dev</option>
             <option value="personal">personal</option>
             <option value="gschool">gschool</option>
           </select>
 
-          <select className="form-control label-select">
-            <option>Remove label</option>
+          <select className="form-control label-select"
+              onChange={this.handleRemoveLabelChange.bind(this)}>
+            <option value="reset">Remove label</option>
             <option value="dev">dev</option>
             <option value="personal">personal</option>
             <option value="gschool">gschool</option>
@@ -46,6 +48,16 @@ class Toolbar extends Component {
         </div>
       </div>
     );
+  }
+
+  handleAddLabelChange(event) {
+    this.props.handleAddLabelChange(event);
+    event.target.value = "reset";
+  }
+
+  handleRemoveLabelChange(event) {
+    this.props.handleRemoveLabelChange(event);
+    event.target.value = "reset";
   }
 
 }
