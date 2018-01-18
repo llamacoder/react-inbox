@@ -10,12 +10,16 @@ const UNREAD_COUNT = 1;
 class App extends Component {
   constructor () {
     super();
-    this.state = { messages: [], unreadCount:UNREAD_COUNT, selectTool:SELECT_NONE  };
+    this.state = { messages: [], unreadCount:UNREAD_COUNT, selectTool:SELECT_NONE, addMsg:false  };
   }
   render() {
     return (
       <div className="App">
+        <div className="header">
+          <h4>React Inbox</h4>
+        </div>
         <Toolbar selectTool={ this.state.selectTool }
+          clickAddMessageButton={ this.clickAddMessageButton.bind(this) }
           unreadCount={ this.state.unreadCount }
            clickSelectTool={this.clickSelectTool.bind(this)}
            clickReadButton={ this.clickReadButton.bind(this)}
@@ -24,7 +28,9 @@ class App extends Component {
            handleAddLabelChange={ this.handleAddLabelChange.bind(this) }
            handleRemoveLabelChange={ this.handleRemoveLabelChange.bind(this) }
           />
-        <MessageList messages={ this.state.messages } toggleClass={this.toggleClass.bind(this)}/>
+        <MessageList addMsg={this.state.addMsg} messages={ this.state.messages }
+            handleAddMessage={this.handleAddMessage.bind(this)}
+            toggleClass={this.toggleClass.bind(this)}/>
       </div>
     );
   }
@@ -39,6 +45,10 @@ class App extends Component {
     this.setPropForSelected("read", false);
   }
 
+  clickAddMessageButton() {
+    this.setState({ addMsg:!this.state.addMsg })
+  }
+
   //  This method gets called when the user clicks on the selectTool button.
   //  It should toggle between none (empty square) and all (checked square)
   clickSelectTool(e) {
@@ -51,6 +61,20 @@ class App extends Component {
       this.setSelectionForAll(true);
     }
   }
+
+  async handleAddMessage(subject, body) {
+      const response = await fetch('http://localhost:8082/api/messages', {
+        method: 'POST',
+        body: JSON.stringify({'subject':subject, 'body':body}),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        }
+      })
+      const message = await response.json()
+      this.setState({messages: [...this.state.messages, message]})
+      this.clickAddMessageButton();
+    }
 
   handleAddLabelChange(event) {
     let addLabel = event.target.value;
@@ -127,12 +151,29 @@ class App extends Component {
     this.setState({ selectTool: selCount });
   }
 
-  componentWillMount() {
-    let messageArray = this.initializeData();
-    let unread = this.getPropCount(messageArray, "read", false);
-    this.setState({ messages: messageArray, unreadCount: unread });
-    this.updateSelectTool(messageArray);
+  async componentDidMount() {
+    const response = await fetch('http://localhost:8082/api/messages')
+    const json = await response.json()
+    const newMessages = json._embedded.messages;
+    this.setState({messages: newMessages})
+    let unread = this.getPropCount(newMessages, "read", false);
+    this.setState({unreadCount: unread})
+    this.updateSelectTool(newMessages);
   }
+
+  async createMessage(item) {
+    const response = await fetch('http://localhost:8082/api/people', {
+      method: 'POST',
+      body: JSON.stringify(item),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      }
+    })
+    const person = await response.json()
+    this.setState({people: [...this.state.people, person]})
+  }
+
 
   //  returns a count of how many messages have the input prop with a value of val
   getPropCount(messages, prop, val) {
@@ -142,72 +183,6 @@ class App extends Component {
     return count;
   }
 
-  initializeData() {
-    return [
-      {
-        "id": 1,
-        "subject": "You can't input the protocol without calculating the mobile RSS protocol!",
-        "read": false,
-        "starred": true,
-        "selected": true,
-        "labels": ["dev", "personal"]
-      },
-      {
-        "id": 2,
-        "subject": "connecting the system won't do anything, we need to input the mobile AI panel!",
-        "read": false,
-        "selected": true,
-        "starred": false,
-        "labels": []
-      },
-      {
-        "id": 3,
-        "subject": "Use the 1080p HTTP feed, then you can parse the cross-platform hard drive!",
-        "read": false,
-        "selected": true,
-        "starred": true,
-        "labels": ["dev"]
-      },
-      {
-        "id": 4,
-        "subject": "We need to program the primary TCP hard drive!",
-        "selected": true,
-        "read": true,
-        "starred": false,
-        "labels": []
-      },
-      {
-        "id": 5,
-        "subject": "If we override the interface, we can get to the HTTP feed through the virtual EXE interface!",
-        "selected": true,
-        "read": false,
-        "starred": false,
-        "labels": ["personal"]
-      },
-      {
-        "id": 6,
-        "subject": "We need to back up the wireless GB driver!",
-        "selected": true,
-        "starred": true,
-        "labels": []
-      },
-      {
-        "id": 7,
-        "subject": "We need to index the mobile PCI bus!",
-        "read": true,
-        "starred": false,
-        "labels": ["dev", "personal"]
-      },
-      {
-        "id": 8,
-        "subject": "If we connect the sensor, we can get to the HDD port through the redundant IB firewall!",
-        "read": false,
-        "selected": false,
-        "starred": true,
-        "labels": []
-      }
-    ];
-  }
 }
 
 export default App;

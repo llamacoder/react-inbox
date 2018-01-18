@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 
 class Message extends Component {
   render() {
-    let labels = {};
+    let labels = '';
     if (this.props.message.labels) {
       labels = this.props.message.labels.map((label, idx) => {
         return <span key={idx} className="label label-warning">{label}</span>

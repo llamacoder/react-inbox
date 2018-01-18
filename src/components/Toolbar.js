@@ -4,7 +4,6 @@ class Toolbar extends Component {
   render() {
     //  The following array of states correspond to SELECT_NONE, SELECT_SOME, and SELECT_ALL
     const selectBtnClasses = ['fa-square-o','fa-minus-square-o','fa-check-square-o'];
-    let selectBtnClass = selectBtnClasses[this.props.selectTool];
     return (
       <div className="row toolbar">
         <div className="col-md-12">
@@ -13,15 +12,20 @@ class Toolbar extends Component {
             unread messages
           </p>
 
+          <a className="btn btn-danger">
+                <i className="fa fa-plus" onClick={this.props.clickAddMessageButton}></i>
+          </a>
           <button className="btn btn-default">
-            <i className={"fa " + selectBtnClass} onClick={this.props.clickSelectTool}></i>
+            <i className={"fa " + selectBtnClasses[this.props.selectTool]} onClick={this.props.clickSelectTool}></i>
           </button>
 
-          <button className="btn btn-default" onClick={this.props.clickReadButton}>
+          <button className="btn btn-default"
+                  onClick={this.props.clickReadButton}>
             Mark As Read
           </button>
 
-          <button className="btn btn-default" onClick={this.props.clickUnreadButton}>
+          <button className="btn btn-default"
+                  onClick={this.props.clickUnreadButton}>
             Mark As Unread
           </button>
 

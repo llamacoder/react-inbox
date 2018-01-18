@@ -5,6 +5,12 @@ body {
   font-family: sans-serif;
 }
 
+.header {
+  height: 50px;
+  background:gray;
+  color:white;
+  padding: 10px;
+}
 .message {
   margin-left: 0px;
   padding-top: 8px;
