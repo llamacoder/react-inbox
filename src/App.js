@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import {withRouter} from "react-router-dom";
+import { Switch, Route } from 'react-router-dom';
 import MessageList from './components/MessageList';
 import Toolbar from './components/Toolbar';
 
@@ -10,7 +12,7 @@ const UNREAD_COUNT = 1;
 class App extends Component {
   constructor () {
     super();
-    this.state = { messages: [], unreadCount:UNREAD_COUNT, selectTool:SELECT_NONE, addMsg:false  };
+    this.state = { messages: [], unreadCount:UNREAD_COUNT, selectTool:SELECT_NONE  };
   }
   render() {
     return (
@@ -28,9 +30,16 @@ class App extends Component {
            handleAddLabelChange={ this.handleAddLabelChange.bind(this) }
            handleRemoveLabelChange={ this.handleRemoveLabelChange.bind(this) }
           />
-        <MessageList addMsg={this.state.addMsg} messages={ this.state.messages }
-            handleAddMessage={this.handleAddMessage.bind(this)}
-            toggleClass={this.toggleClass.bind(this)}/>
+        <Switch>
+          <Route exact path='/' render={routeProps => <MessageList {...routeProps}
+            addMsg={false} messages={ this.state.messages }
+              handleAddMessage={this.handleAddMessage.bind(this)}
+              toggleClass={this.toggleClass.bind(this)} />} />
+          <Route exact path='/compose' render={routeProps => <MessageList {...routeProps}
+            addMsg={true} messages={ this.state.messages }
+              handleAddMessage={this.handleAddMessage.bind(this)}
+              toggleClass={this.toggleClass.bind(this)} />} />
+        </Switch>
       </div>
     );
   }
@@ -47,7 +56,14 @@ class App extends Component {
 
   //  display the form for adding a message
   clickAddMessageButton() {
-    this.setState({ addMsg:!this.state.addMsg })
+    if (this.props.location.pathname === '/compose') {
+      console.log("pushing main");
+      this.props.history.push('/');
+    } else {
+      console.log(this.props.location.pathname);
+      console.log("pushing compose");
+      this.props.history.push('/compose');
+    }
   }
 
   //  This method gets called when the user clicks on the selectTool button.
@@ -231,4 +247,4 @@ class App extends Component {
 
 }
 
-export default App;
+export default withRouter(App);
