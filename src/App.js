@@ -32,16 +32,39 @@ class App extends Component {
           />
         <Switch>
           <Route exact path='/' render={routeProps => <MessageList {...routeProps}
-            addMsg={false} messages={ this.state.messages }
+             messages={ this.state.messages }
               handleAddMessage={this.handleAddMessage.bind(this)}
-              toggleClass={this.toggleClass.bind(this)} />} />
+              setPropValue={this.setPropValue.bind(this)}
+              onSubjectClick={this.handleSubjectClick.bind(this)} />} />
           <Route exact path='/compose' render={routeProps => <MessageList {...routeProps}
-            addMsg={true} messages={ this.state.messages }
+              addMsg={true} messages={ this.state.messages }
               handleAddMessage={this.handleAddMessage.bind(this)}
-              toggleClass={this.toggleClass.bind(this)} />} />
+              setPropValue={this.setPropValue.bind(this)}
+              onSubjectClick={this.handleSubjectClick.bind(this)} />} />
+          <Route exact path='/:id' render={routeProps => <MessageList {...routeProps}
+              addMsg={true} messages={ this.state.messages }
+              handleAddMessage={this.handleAddMessage.bind(this)}
+              setPropValue={this.setPropValue.bind(this)}
+              onSubjectClick={this.handleSubjectClick.bind(this)} />} />
         </Switch>
       </div>
     );
+  }
+
+  async handleSubjectClick(id) {
+    //  get the subject for the message ID, then shove it into the message
+    const response = await fetch(`http://localhost:8082/api/messages/${id}`);
+    const json = await response.json()
+    const updatedMsgs = this.state.messages.map(message => {
+      if (message.id === id) {
+        message.body = json.body;
+      }
+      return message;
+    })
+    this.setState({messages: updatedMsgs});
+    
+    //  push the endpoint for the message ID
+    this.props.history.push(`/${id}`);
   }
 
   //  This method gets called when the user clicks on the Mark as Read button.
@@ -57,11 +80,8 @@ class App extends Component {
   //  display the form for adding a message
   clickAddMessageButton() {
     if (this.props.location.pathname === '/compose') {
-      console.log("pushing main");
       this.props.history.push('/');
     } else {
-      console.log(this.props.location.pathname);
-      console.log("pushing compose");
       this.props.history.push('/compose');
     }
   }
@@ -79,7 +99,7 @@ class App extends Component {
     }
   }
 
-  //  This message handes the submission of a new message.
+  //  This method handles the submission of a new message.
   async handleAddMessage(subject, body) {
       const response = await fetch('http://localhost:8082/api/messages', {
         method: 'POST',
@@ -167,8 +187,7 @@ class App extends Component {
       info[prop] = val;
     }
 
-    console.log(info);
-    const response = await fetch('http://localhost:8082/api/messages', {
+    await fetch('http://localhost:8082/api/messages', {
       method: 'PATCH',
       body: JSON.stringify(info),
       headers: {
@@ -176,7 +195,6 @@ class App extends Component {
         'Accept': 'application/json',
       }
     })
-    console.log(response);
   }
 
   setPropForSelected(prop, val) {
@@ -210,6 +228,24 @@ class App extends Component {
     this.updateSelectTool(messages);
     if (prop === 'starred') {
       this.setPropsRemotely([id], 'star', 'star', messages[index][prop]);
+    }
+  }
+
+  setPropValue(id, prop, val) {
+    let messages = this.state.messages;
+
+    //  find the message with the input ID, then set its value
+    let index = messages.findIndex(x => x.id === id);
+    messages[index][prop] = val;
+    this.setState({ messages: messages });
+    if (prop === 'starred') {
+      this.setPropsRemotely([id], 'star', 'star', messages[index][prop]);
+    } else if (prop === 'read') {
+      this.setPropsRemotely([id], 'read', 'read', messages[index][prop]);
+      let unread = this.getPropCount(messages, "read", false);
+      this.setState({unreadCount: unread})
+    } else {
+      this.updateSelectTool(messages);
     }
   }
 
